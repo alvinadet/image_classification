@@ -1,0 +1,75 @@
+<html>
+<head>
+  <script src="https://unpkg.com/ml5@0.1.3/dist/ml5.min.js"></script>
+</head>
+<h1>Image classification</h1>
+    <p>The model labeled this as
+    <span id="result">...</span> with a confidence of
+    <span id="probability">...</span></p>
+<input type="file" id="fileElem" accept="image/*" style="display:none" onchange="handleFiles(this.files)">
+<a href="#" id="fileSelect">Select files</a> 
+<div id="fileList">
+  <p>No files selected!</p>
+</div>
+<script>
+window.URL = window.URL || window.webkitURL;
+
+const fileSelect = document.getElementById("fileSelect"),
+    fileElem = document.getElementById("fileElem"),
+    fileList = document.getElementById("fileList");
+
+fileSelect.addEventListener("click", function (e) {
+  if (fileElem) {
+    fileElem.click();
+  }
+  e.preventDefault(); // prevent navigation to "#"
+}, false);
+
+function handleFiles(files) {
+  if (!files.length) {
+    fileList.innerHTML = "<p>No files selected!</p>";
+  } else {
+    fileList.innerHTML = "";
+    const list = document.createElement("ul");
+    fileList.appendChild(list);
+    for (let i = 0; i < files.length; i++) {
+      const li = document.createElement("li");
+      list.appendChild(li);
+      
+      const img = document.createElement("img");
+      const att = document.createAttribute("id");
+      att.value = "image";
+      img.setAttributeNode(att);
+      img.src = window.URL.createObjectURL(files[i]);
+      img.width = 400;
+      img.onload = function() {
+        window.URL.revokeObjectURL(this.src);
+      }
+      li.appendChild(img);
+      const info = document.createElement("span");
+      info.innerHTML = files[i].name + ": " + files[i].size + " bytes";
+      li.appendChild(info);
+
+      // The image we want to classify
+      const image = document.getElementById('image');
+      // The result tag in the HTML
+      const result = document.getElementById('result');
+      // The probability tag in the HTML
+      const probability = document.getElementById('probability');
+
+      // Initialize the Image Classifier method with MobileNet
+      const classifier = ml5.imageClassifier('MobileNet', function() {
+        console.log('Model Loaded!');
+      });
+
+      // Make a prediction with the selected image
+      // This will return an array with a default of 10 options with their probabilities
+      classifier.predict(image, function(err, results) {
+        result.innerText = results[0].className;
+        probability.innerText = results[0].probability.toFixed(4);
+      });
+    }
+  }
+}
+</script>
+</html>
